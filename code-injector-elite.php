@@ -3,19 +3,19 @@
  * Code Injector Elite
  *
  * @package           CodeInjectorElite
- * @author            Code Injector Elite
- * @copyright         2024 Code Injector Elite
+ * @author            a5ah1
+ * @copyright         2025 a5ah1
  * @license           MIT
  *
  * @wordpress-plugin
  * Plugin Name:       Code Injector Elite
- * Plugin URI:        https://www.example.com
+ * Plugin URI:        https://github.com/a5ah1/code-injector-elite
  * Description:       Professional code injection plugin for WordPress. Inject custom HTML, JavaScript, and CSS into page headers and footers with precision and control.
  * Version:           1.0.4
  * Requires at least: 5.2
  * Requires PHP:      7.2
- * Author:            Code Injector Elite
- * Author URI:        https://www.example.com
+ * Author:            a5ah1
+ * Author URI:        https://github.com/a5ah1/code-injector-elite
  * Text Domain:       code-injector-elite
  * License:           MIT
  * License URI:       https://opensource.org/license/mit
@@ -55,7 +55,7 @@ function code_injector_elite_updates_init() {
 	);
 
 	// Optional: Set the branch that contains the stable release
-	$update_checker->setBranch( 'main' );
+	$update_checker->setBranch( 'master' );
 
 	// Optional: If you're using a private repository, specify an access token
 	// $update_checker->setAuthentication( 'your-token-here' );
