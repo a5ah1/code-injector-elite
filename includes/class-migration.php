@@ -197,27 +197,65 @@ class CIE_Migration {
 	 */
 	private function migrate_global_legacy() {
 		$migrated = 0;
+		$failed   = 0;
 
 		// Migrate header
 		$header = get_option( self::LEGACY_GLOBAL_HEADER, '' );
 		if ( ! empty( $header ) ) {
-			update_option( CIE_OPTION_GLOBAL_HEADER, $header );
-			delete_option( self::LEGACY_GLOBAL_HEADER );
-			$migrated++;
+			// Update to new option
+			$updated = update_option( CIE_OPTION_GLOBAL_HEADER, $header );
+
+			// Only delete old option if update succeeded
+			if ( $updated ) {
+				// Verify the data was written correctly
+				$verify = get_option( CIE_OPTION_GLOBAL_HEADER, '' );
+				if ( $verify === $header ) {
+					delete_option( self::LEGACY_GLOBAL_HEADER );
+					$migrated++;
+				} else {
+					$failed++;
+				}
+			} else {
+				$failed++;
+			}
 		}
 
 		// Migrate footer
 		$footer = get_option( self::LEGACY_GLOBAL_FOOTER, '' );
 		if ( ! empty( $footer ) ) {
-			update_option( CIE_OPTION_GLOBAL_FOOTER, $footer );
-			delete_option( self::LEGACY_GLOBAL_FOOTER );
-			$migrated++;
+			// Update to new option
+			$updated = update_option( CIE_OPTION_GLOBAL_FOOTER, $footer );
+
+			// Only delete old option if update succeeded
+			if ( $updated ) {
+				// Verify the data was written correctly
+				$verify = get_option( CIE_OPTION_GLOBAL_FOOTER, '' );
+				if ( $verify === $footer ) {
+					delete_option( self::LEGACY_GLOBAL_FOOTER );
+					$migrated++;
+				} else {
+					$failed++;
+				}
+			} else {
+				$failed++;
+			}
 		}
 
-		if ( $migrated > 0 ) {
+		// Build response based on results
+		if ( $migrated > 0 && $failed === 0 ) {
 			return array(
 				'success' => true,
 				'message' => sprintf( 'Successfully migrated %d global option(s).', $migrated ),
+			);
+		} elseif ( $migrated > 0 && $failed > 0 ) {
+			return array(
+				'success' => true,
+				'message' => sprintf( 'Partially migrated: %d succeeded, %d failed. Failed items were not deleted.', $migrated, $failed ),
+			);
+		} elseif ( $failed > 0 ) {
+			return array(
+				'success' => false,
+				'message' => sprintf( 'Migration failed for %d option(s). Data was not deleted.', $failed ),
 			);
 		}
 
@@ -276,29 +314,95 @@ class CIE_Migration {
 			);
 		}
 
-		$migrated = 0;
+		$migrated       = 0;
+		$failed         = 0;
+		$fields_success = 0;
+		$fields_failed  = 0;
 
 		foreach ( $post_ids as $post_id ) {
+			$post_migrated = 0;
+			$post_failed   = 0;
+
 			// Migrate header
 			$header = get_post_meta( $post_id, self::LEGACY_PAGE_HEADER, true );
 			if ( ! empty( $header ) ) {
-				update_post_meta( $post_id, CIE_META_PAGE_HEADER, $header );
-				delete_post_meta( $post_id, self::LEGACY_PAGE_HEADER );
+				// Update to new meta key
+				$updated = update_post_meta( $post_id, CIE_META_PAGE_HEADER, $header );
+
+				// Only delete old meta if update succeeded
+				if ( false !== $updated ) {
+					// Verify the data was written correctly
+					$verify = get_post_meta( $post_id, CIE_META_PAGE_HEADER, true );
+					if ( $verify === $header ) {
+						delete_post_meta( $post_id, self::LEGACY_PAGE_HEADER );
+						$post_migrated++;
+						$fields_success++;
+					} else {
+						$post_failed++;
+						$fields_failed++;
+					}
+				} else {
+					$post_failed++;
+					$fields_failed++;
+				}
 			}
 
 			// Migrate footer
 			$footer = get_post_meta( $post_id, self::LEGACY_PAGE_FOOTER, true );
 			if ( ! empty( $footer ) ) {
-				update_post_meta( $post_id, CIE_META_PAGE_FOOTER, $footer );
-				delete_post_meta( $post_id, self::LEGACY_PAGE_FOOTER );
+				// Update to new meta key
+				$updated = update_post_meta( $post_id, CIE_META_PAGE_FOOTER, $footer );
+
+				// Only delete old meta if update succeeded
+				if ( false !== $updated ) {
+					// Verify the data was written correctly
+					$verify = get_post_meta( $post_id, CIE_META_PAGE_FOOTER, true );
+					if ( $verify === $footer ) {
+						delete_post_meta( $post_id, self::LEGACY_PAGE_FOOTER );
+						$post_migrated++;
+						$fields_success++;
+					} else {
+						$post_failed++;
+						$fields_failed++;
+					}
+				} else {
+					$post_failed++;
+					$fields_failed++;
+				}
 			}
 
-			$migrated++;
+			// Track posts with at least one successful migration
+			if ( $post_migrated > 0 ) {
+				$migrated++;
+			}
+
+			// Track posts with any failures
+			if ( $post_failed > 0 ) {
+				$failed++;
+			}
+		}
+
+		// Build response based on results
+		if ( $fields_success > 0 && $fields_failed === 0 ) {
+			return array(
+				'success' => true,
+				'message' => sprintf( 'Successfully migrated %d %s(s) (%d field(s)).', $migrated, $post_type, $fields_success ),
+			);
+		} elseif ( $fields_success > 0 && $fields_failed > 0 ) {
+			return array(
+				'success' => true,
+				'message' => sprintf( 'Partially migrated: %d field(s) succeeded, %d field(s) failed across %d %s(s). Failed items were not deleted.', $fields_success, $fields_failed, count( $post_ids ), $post_type ),
+			);
+		} elseif ( $fields_failed > 0 ) {
+			return array(
+				'success' => false,
+				'message' => sprintf( 'Migration failed for %d field(s) across %d %s(s). Data was not deleted.', $fields_failed, count( $post_ids ), $post_type ),
+			);
 		}
 
 		return array(
-			'success' => true,
-			'message' => sprintf( 'Successfully migrated %d %s(s).', $migrated, $post_type ),
+			'success' => false,
+			'message' => 'No legacy data found to migrate.',
 		);
 	}
 }
