@@ -1,0 +1,25 @@
+{
+  "name": "a5ah1/code-injector-elite",
+  "description": "Professional code injection plugin for WordPress. Inject custom HTML, JavaScript, and CSS into page headers and footers.",
+  "type": "wordpress-plugin",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "a5ah1",
+      "homepage": "https://github.com/a5ah1"
+    }
+  ],
+  "require": {
+    "php": ">=7.2",
+    "yahnis-elsts/plugin-update-checker": "^5.0"
+  },
+  "autoload": {
+    "classmap": [
+      "includes/"
+    ]
+  },
+  "support": {
+    "issues": "https://github.com/a5ah1/code-injector-elite/issues",
+    "source": "https://github.com/a5ah1/code-injector-elite"
+  }
+}
